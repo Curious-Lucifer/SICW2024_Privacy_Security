@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [[ $# == 0 ]]; then
+    echo "========= DNS HIJACK FAKE SITE ========="
+    echo "Usage:";
+    echo "Build challenge:     ./snippet build";
+    echo "Rebuild challenge:   ./snippet rebuild";
+    echo "Start challenge:     ./snippet start";
+    echo "Stop challenge:      ./snippet stop";
+    exit 0
+fi
+
+if [[ $1 == "build" ]]; then
+    docker build -t dns_hijack_fake_site .;
+elif [[ $1 == "rebuild" ]]; then
+    docker rmi dns_hijack_fake_site;
+    docker build -t dns_hijack_fake_site .;
+elif [[ $1 == "start" ]]; then
+    docker run -p 80:80 --name dns_hijack_fake_site -d dns_hijack_fake_site;
+elif [[ $1 == "stop" ]]; then
+    docker stop dns_hijack_fake_site;
+    docker rm dns_hijack_fake_site;
+fi

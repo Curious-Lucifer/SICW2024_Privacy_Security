@@ -1,0 +1,43 @@
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,p,blockquote,th,td{
+	margin:0;padding:0;
+}
+#div_OuterEdge {
+}
+#div_banner {
+	background-image: url(../images/portal/banner.jpg);
+	background-repeat: no-repeat;
+	background-position: left top;
+	height: 100px;
+	background-color: 52bde3;
+}
+#div_menu {
+	background-image: url(../images/portal/menu.gif);
+	background-repeat: repeat-x;
+	height: 41px;
+	text-decoration: none;
+}
+#div_content {
+	background-color: #afdef3;
+	width: 100%;
+	height: 100%;
+}
+#div_left_bt {
+	width: 152px;
+	padding: 10px;
+	float: left;
+	background-color: afdef3;
+}
+#div_right_content {
+	padding: 0px;
+	position: relative;
+	float: left;
+	background-color: afdef3;
+	width: 80%;
+}
+
+#div_foot {
+	height: 50px;
+	clear: both;
+	text-align: center;
+	padding-top: 15px;
+}

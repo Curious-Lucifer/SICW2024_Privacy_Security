@@ -1,0 +1,507 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" >
+<html>
+	<head>
+		
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+<link rel="Shortcut Icon" type="image/x-icon" href="{{ url_for('static', filename='images/title-icon.png') }}" />
+<title>高雄市高中職 (程式版本:v1.0131 版本日期:106/11/29)</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/themes/start/jquery-ui.min.css') }}" type="text/css" media="all" />
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/portal.style.css') }}" />
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/portal.layout.css') }}" />
+
+		<style type="text/css">
+			body{
+				font-size: 75%;
+			}
+			.tdLabel{
+				font-size:			1em;
+				text-align:			right;
+				width:				auto;
+				white-space:		nowrap;
+				height:				24px;
+			}
+			.text-field {
+				border: 1px solid #999;
+				border-radius: 3px;
+				height: 21px;
+				padding: 1px 4px;
+			}
+			.dropdown{
+				appearance: none;
+				-moz-appearance: none;
+				-webkit-appearance: none;
+				background: url("{{ url_for('static', filename='images/arrow.png') }}") no-repeat scroll right center transparent;
+				padding-right: 18px;
+			}
+			#loginForm input,select{
+				font-size: 29px;
+			}
+		</style>
+
+		
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/base/jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/base/jquery-ui.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqgrid/jquery.jqGrid.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/loader/load.messagebox.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/loader/load.dateutil.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/loader/load.function.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/loader/load.global.setting.js') }}"></script>
+
+		<script type="text/javascript">
+			$(function(){
+				$.post("School.action", {schNo:''}, function(json){
+					var d = json.parameterMap;
+					if(d != null && d.list != null){
+						var h1 = ['<option value="">請選擇</option>'];
+						var cc = {};
+
+						var doChange = false;
+
+						for(var i=0;i<d.list.length;i++){
+							var selected = '';
+							if(d.list[i].d == 'Y'){
+								selected = ' selected="selected"';
+								doChange = true;
+							}
+							h1.push('<option value="'+d.list[i].z+'"'+selected+'>'+d.list[i].n+'</option>');
+							cc[''+d.list[i].z] = d.list[i].s;
+						}
+
+						$("#zip").html(h1.join("")).change(function(){
+							var v = $(this).val();
+							var def = $('#schNo').attr("def");
+							$('#schNo').removeAttr("def");
+
+							if(cc[v]){
+								var h2 = ['<option value="">請選擇</option>'];
+								for(var i=0;i<cc[v].length;i++){
+									var selected = '';
+									if(def != null && def == cc[v][i].s) selected = ' selected="selected"';
+									h2.push('<option value="'+cc[v][i].s+'"'+selected+'>'+cc[v][i].n+'</option>');
+								}
+								$("#schNo").html(h2.join(""));
+								if(h2.length == 2){
+									$("#schNo").val($("#schNo").find("option:last")[0].value);
+									$("#loginId").focus();
+								}
+							}
+						})
+
+						if(doChange){
+							$("#schNo").attr("def","");
+							$("#zip").change();
+						}
+					}
+				},'json');
+
+				$('#loginForm').attr("autocomplete","off").submit(function(){
+					if($('#loginId').val()==''){
+						$.showMsg('請輸入帳號!');
+						$('#loginId').focus();
+						return false;
+					}
+
+					if($('#password').val()==''){
+						$.showMsg('請輸入密碼!');
+						$('#password').focus();
+						return false;
+					}
+
+					if($('#validateCode').val()==''){
+						$.showMsg('請輸入驗證碼!');
+						$('#validateCode').focus();
+						return false;
+					}
+
+					return true;
+				});
+
+				$('#login').button();
+				$('#reset').button();
+
+				$("#validatePic").click(function(){
+					$.postJSON("Validate.action", function(json){
+						$("#validatePic").attr("src",json.src);
+						$("#validateSrc").val(json.validateSrc);
+						$.soundBase = json.ss;
+					});
+				}).click();
+
+				$("#sound").css("cursor","pointer").click(function(){
+					if($.soundBase != null && $.soundPlaying == null){
+						$.soundPlaying = true;
+						var o = $('<audio><source src="data:audio/mpeg;base64,'+$.soundBase+'" type="audio/mpeg"></audio>').appendTo('body');
+						o.on('ended', function(){
+							o.remove();
+							delete $.soundPlaying;
+						})[0].play();
+					}
+				})
+
+				$('#loginId').attr("AutoComplete","Off").keypress(function(e){
+					var keyCode = e.keyCode?e.keyCode:e.which;
+					if(keyCode==13){
+						$('#password').focus();
+						return false;
+					}
+				}).focus();
+
+				$('#password').attr("AutoComplete","Off").keypress(function(e){
+					var keyCode = e.keyCode?e.keyCode:e.which;
+					var isShift = e.shiftKey||(keyCode == 16)|| false;
+
+					if((keyCode >= 65 && keyCode <= 90 && !isShift) //Caps Lock開啟，shift鍵沒有按住 
+						|| (keyCode >= 97 && keyCode <= 122 && isShift)){ //Caps Lock開啟，shift鍵按住
+						$('#capslock').show();
+					}else{
+						$('#capslock').hide();
+					}
+
+					if(keyCode==13){
+						$('#validateCode').focus();
+						return false;
+					}
+				});
+
+				$('#validateCode').keypress(function(e){
+					var keyCode = e.keyCode?e.keyCode:e.which;
+					if(keyCode==13){
+						$('#loginForm').submit();
+						return false;
+					}
+				});
+
+				$("#newreg").button().click(function(){
+					if($('#schNo').val()==''){
+						$.showMsg('請選擇學校！');
+						return false;
+					}
+					$("#newregform").find("[name='schNo']").val($('#schNo').val());
+					$("#newregform").attr("action","/newreg.action").submit();
+				})
+
+				$("#newcourse").button().click(function(){
+					if($('#schNo').val()==''){
+						$.showMsg('請選擇學校！');
+						return false;
+					}				
+					$("#newcourseform").find("[name='schNo']").val($('#schNo').val());
+					$("#newcourseform").attr("action","/newcourse.action").submit();
+				})
+
+				$("#service").button().click(function(){
+					$("#serviceForm").attr("action","https://highschool.kh.edu.tw/qanda").submit();
+				})
+
+				$("#eportfolio").button().click(function(){
+					$("#eportfolioForm").attr("action","https://epf.kh.edu.tw").submit();
+				})
+
+				$("#campus").button().click(function(){
+					var schNo = $('#schNo').val();
+					if($('#schNo').val()==''){
+						$.showMsg('請選擇學校！');
+						return false;
+					}
+					$('<form action="eduopenid/login"><input type="hidden" name="school"/><input type="hidden" name="formToken" value="6703672466018374374"/></form>').appendTo('body').find("[name='school']").val(schNo).end().submit();
+				})
+				
+				$("#openId").button().click(function(){
+					var schNo = $('#schNo').val();
+					if($('#schNo').val()==''){
+						$.showMsg('請選擇學校！');
+						return false;
+					}
+					$('<form action="/OpenIdLogin.action" method="post"><input type="hidden" name="school"/></form>').appendTo('body').find("[name='school']").val(schNo).end().submit();
+				})
+
+				var message = '';
+				if(message!='') $.showError(message);
+
+				$("#userType").change(function(){
+					var v = $(this).val();
+					if(v == '1'){
+						$("#birthTr").show();
+						$(".pars").hide();
+						$("#forgotDiv").attr("typs","s");
+					}else if(v == '2'){
+						$("#birthTr, .pars").show();
+						$("#forgotDiv").attr("typs","p");
+					}else if(v == '3'){
+						$("#birthTr, .pars").hide();
+						$("#forgotDiv").attr("typs","t");
+					}
+				}).change();
+
+				$("#forgot").button().click(function(){
+					var schNo = $.trim($("#schNo").val());
+					if(schNo == ''){
+						$.showMsg('請先選擇學校！');
+					}else{
+						$("#forgotDiv").data('schNo',schNo).dialog({title:'忘記密碼 - '+$("#schNo").find(":selected")[0].text}).dialog('open');
+					}
+				})
+
+				$("#forgotDiv").dialog({
+					width: 400
+					,modal: true
+					,autoOpen: false
+					,title: '忘記密碼'
+					,open: function(event,ui){
+						showError("");
+						$("#act").val("");
+						$("#name").val("");
+						$("#birth").val("");
+						$("#idno").val("");
+						$("#save").button({disabled:false}).show();
+					}
+					,close: function(event,ui){
+						showError("");
+						$("#act").val("");
+						$("#name").val("");
+						$("#birth").val("");
+						$("#idno").val("");
+						$("#save").button({disabled:false}).show();
+					}
+				})
+
+				$("#save").click(function(){
+					var act = $.trim($("#act").val());
+					var name = $.trim($("#name").val());
+					var birth = $.trim($("#birth").val());
+					var idno = $.trim($("#idno").val());
+					var typs = $.trim($("#forgotDiv").attr("typs"));
+					var dats = typs == 'p'?'學生':'';
+
+					if(act == ""){
+						showError("帳號不可以空白");
+						$("#act").focus();
+					}else if(name == ""){
+						showError(dats+"姓名不可以空白");
+						$("#name").focus();
+					}else if(!$("#birthTr").is(":hidden") && birth == ""){
+						showError(dats+"生日不可以空白");
+						$("#birth").focus();
+					}else if(!$("#birthTr").is(":hidden") && (isNaN(parseInt(birth)) || birth.length != 8 || parseInt(birth) < 19500000)){
+						showError(dats+"生日請輸入西元年共八位數字(yyyyMMdd)");
+						$("#birth").select();
+					}else if(idno == ""){
+						showError(dats+"身分證不可以空白");
+						$("#idno").focus();
+					}else{
+						$("#save").button("option","disabled",true);
+						var tt = new Date().getTime();
+
+						var a = "act="+act+",name="+name+",idno="+idno+",schNo="+$("#forgotDiv").data('schNo')+",typs="+typs;
+						if(!$("#birthTr").is(":hidden")) a += ",birth="+birth;
+
+						$.ajax({
+							url: "Fta.action",
+							type: "POST",
+							dataType: "json",
+							data: {a:a},
+							success: function(json,status,xhr){
+								var d = json.parameterMap;
+								if(d != null){
+									if(d["status"] != null && d["status"] == "200"){
+										$('#forgotDiv').dialog('close');
+										$("#forgotDiv").find("input").val("");
+										$.showMsg(d["msg"]);
+									}else{
+										if(d["msg"] != null && d["msg"] != "")
+											showError(d["msg"]);
+									}
+								}
+							},
+							error: function(xhr,status,err){
+								showError('發生錯誤!!');
+							},
+							complete: function(xhr,status){
+								//至少等2.5秒再開放下一按
+								var p = tt+2500-new Date().getTime();
+								if(p > 0){
+									setTimeout(function(){
+										$("#save").button("option","disabled",false);
+									},p);
+								}else $("#save").button("option","disabled",false);
+							}
+						});
+					}
+				});
+
+				$("#close").button().click(function(){
+					$('#forgotDiv').dialog('close');
+					$("#forgotDiv").find("input").val("");
+				});
+
+				if('' != ''){
+					$('body').css('background-image',"url('{{ url_for('static', filename='images/background2.jpg') }}')");
+					$("#loginForm").prepend('<div style="color: red;">請輸入您在校務系統的帳密，以登入學習歷程</div>');
+					$("#newcourse,#eportfolio,#campus,#newreg,#service,#openId").hide();
+				}else{
+					$("#dataDiv").dialog({title:'公告',width: 600}).dialog('open');
+				}
+
+				$("#btnOK").button({
+					icons:{primary: "ui-icon-cancel"}
+				}).click(function(){
+					$('#dataDiv').dialog('close');
+				});
+
+				function showError(error){
+					if($.trim(error) != ''){
+						$("#error").html(error).show();
+					}else $("#error").hide().html("");
+					$("#save").button({disabled:false});
+				}
+			});
+		</script>
+	</head>
+	<body style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');background-repeat: no-repeat;">
+		<div style="margin: 320px 0 0 200px;line-height: 50px;font-size: 32px;font-family:微軟正黑體, Microsoft JhengHei, Arial, Helvetica;">
+			<form id="loginForm" action="Login.action" method="post">
+				<div>行政區：<select id="zip" class="dropdown"><option value="">請選擇</option></select>
+				<!-- 
+					<a style="font-size: 32px;" href="download/manual.rar" target="_blank">操作手冊</a>
+					<a style="font-size: 32px;" href="download/aa.docx" target="_blank">教務報表</a>
+					<a style="font-size: 32px;" href="download/bb.docx" target="_blank">學務報表</a> -->
+				</div>
+				<div>學　校：<select id="schNo" name="schNo" class="dropdown"><option value="">請選擇</option></select></div>
+				<div>帳　號：<input type="text" id="loginId" name="loginId" class="validate[required]" maxlength="60"/></div>
+				<div>密　碼：<input type="password" id="password" name="password" class="validate[required]" maxlength="40" autocomplete="off" />&nbsp;<span id="capslock" class="txt_orange" style="font-size:0.8em;display:none;">※大寫鎖定已啟用</span></div>
+				<div>驗證碼：<input type="text" name="validateCode" id="validateCode" maxlength="4" style="width:90px;vertical-align: middle;" class="validate[required,length[4]]" />
+					<img id="validatePic" style="width:99px;height:33px;vertical-align: middle;margin-right: 10px;"/>
+					<!--<button type="button" id="forgotaa" style="width:150px;height:40px;font-size:16px;">學生忘記密碼</button>-->
+					<!--<button type="button" id="forgotbb" style="width:150px;height:40px;font-size:16px;">教職員忘記密碼</button>-->
+					<div id="sound" class="ui-icon ui-icon-volume-on" style="border: 1px solid #ccc;transform: scale(1.875,1.875);margin: 0;border-radius: 50%;"></div>
+				</div>
+				<div style="font-size: 66%;margin: 14px 0 0 125px;">
+					<button type="submit" id="login">登入</button>
+					<button type="reset" id="reset">清除</button>
+					<button type="button" id="forgot">忘記密碼</button>
+					<button type="button" id="campus">教育雲端帳號登入</button><br/>
+					<button type="button" id="newreg">新生報到</button>
+					<button type="button" id="newcourse">新生選課</button>
+					<button type="button" id="service">客服網</button>
+					<button type="button" id="eportfolio">學習歷程</button>
+					<button type="button" id="openId">OpenID登入</button>
+					
+				</div>
+				<div style="height:25px;"><label id="message" class="login-message" style="color: red;"></label></div>
+				<input type="hidden" id="validateSrc" name="validateSrc"/>
+				<input type="hidden" name="formToken" value="6703672466018374374"/>
+				<input type="hidden" name="formt" value="f2696176-05cc-4e11-8d67-135f30c2507d"/>
+				<input type="hidden"  name="sub" value=""/>
+				<input type="hidden"  name="idToken" value=""/>
+				<input type="hidden"  name="sessionState" value=""/>
+				<input type="hidden" name="client_id" value=""/>
+				<div style="display: none;">
+				<p><span class="txt_blue">【操作說明】</span></p>
+				<p>1.請依登入身分別，先行參考右方的功能說明。</p>
+				<p>2.第一次登入後請儘速修改密碼。</p>
+				<p>3.密碼含英文請注意大小寫。</p>
+				<p>4.驗證碼英文不分大小寫。</p>
+				<p>5.建議使用<a href="https://www.google.com/chrome" target="_blank">Chrome</a>, <a href="http://moztw.org/firefox/" target="_blank">Firefox</a>以取得較佳的使用者體驗。</p>
+				</div>
+			</form>
+			<form id="newregform" method="post" target="_blank">
+				<input type="hidden" name="formt" value="f2696176-05cc-4e11-8d67-135f30c2507d"/>
+				<input type="hidden" name="schNo" />
+				<input type="hidden" name="type" value="newstd"/>
+				<input type="hidden" name="formToken" value="6703672466018374374"/>
+			</form>
+			<form id="newcourseform" method="post" target="_blank">
+				<input type="hidden" name="formt" value="f2696176-05cc-4e11-8d67-135f30c2507d"/>
+				<input type="hidden" name="schNo" />
+				<input type="hidden" name="formToken" value="6703672466018374374"/>
+			</form>
+		</div>
+		<div id="forgotDiv" style="padding:2px; display: none;">
+			<table class="EditTable" cellspacing="6" cellpadding="2" border="0" width="100%">
+				<tr>
+					<td align="left" valign="top" style="font-weight: bold;" colspan="2">
+						為了確認您的身分，請輸入以下資料，核對無誤後，系統會將驗證信寄至您的E-mail信箱，<span style="color: red;">請在收到mail之後，點擊mail裡的url連結以完成驗證的程序</span>，之後即可使用預設密碼登入
+					</td>
+				</tr>
+				<tr><td colspan="2" valign="middle" style="height: 20px;"><hr class="ui-widget-content" style="margin:1px"/></td></tr>
+				<tr>
+					<td style="text-align: right;font-weight: bold;">身分：</td>
+					<td align="left">
+						<select id="userType" style="border: 1px solid #999;border-radius: 3px;height: 24.6px;padding: 1px 4px;">
+						<option value="1" selected="selected">學生</option>
+						<option value="2">家長</option>
+						<option value="3">教職員</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td style="text-align: right;font-weight: bold;">帳號：</td>
+					<td align="left"><input type="text" id="act" maxlength="20" class="text-field" /></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;font-weight: bold;"><span class="pars">學生</span>姓名：</td>
+					<td align="left"><input type="text" id="name" maxlength="20" class="text-field" /></td>
+				</tr>
+				<tr id="birthTr">
+					<td style="text-align: right;font-weight: bold;"><span class="pars">學生</span>生日：</td>
+					<td align="left"><input type="text" id="birth" maxlength="20" class="text-field" placeholder="格式:yyyymmdd" /></td>
+				</tr>
+				<tr>
+					<td style="text-align: right;font-weight: bold;white-space: nowrap;width: 34%;"><span class="pars">學生</span>身分證：</td>
+					<td align="left"><input type="password" id="idno" maxlength="20" class="text-field" /></td>
+				</tr>
+			</table>
+			<hr class="ui-widget-content" style="margin: 6px 7px;"/>
+			<div style="text-align: center;">
+				<button type="button" id="save" style="margin: 6px 14px;">送出</button>
+				<button type="button" id="close" style="margin: 6px 14px;">取消</button>
+			</div>
+			<div id="error" style="display: none;padding: 4px 2px;text-align: center;color: red;font-weight: bold;"></div>
+		</div>
+		<div id="dataDiv" style="margin-top: 10px;line-height: 30px;font-size: 22px;font-family:微軟正黑體, Microsoft JhengHei, Arial, Helvetica;padding: 0 15px;word-break: break-all; display: none;">
+			<table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td>
+					注意：若新生帳號無法登入，請洽詢錄取學校教務處！<br/>
+					<font color="#FF0000">1.學生、家長、教職員帳號無法登入或忘記密碼，請洽詢各學校教務處進行重設。</font><br/>
+					2.各類型帳號與預設密碼格式如下：<br/>
+					&nbsp;&nbsp;&nbsp;學生：學號/學生身分證字號<br/>
+					&nbsp;&nbsp;&nbsp;家長：P學號/學生身分證字號<br/>
+					3.學生學習歷程系統帳號密碼同校務系統。<br/>
+					&nbsp;&nbsp;&nbsp;若有重設密碼請先登入校務系統再登入學習歷程系統!<br/>
+					</td>
+				</tr>
+				<tr>
+					<td align="center"><button id="btnOK">確定</button></td>
+				</tr>
+			</table>
+		</div>
+		<form id="serviceForm" target="_blank">
+			<input type="hidden" name="schNo" />
+			<input type="hidden" name="formToken" value="6703672466018374374"/>
+		</form>
+		<form id="eportfolioForm" target="_blank">
+			<input type="hidden" name="schNo" />
+			<input type="hidden" name="formToken" value="6703672466018374374"/>
+		</form>
+		<span style="font-size: 15pt;">
+			
+			&nbsp;&nbsp;&nbsp;系統服務單位：高雄市政府教育局校務行政中心
+			&nbsp;&nbsp;&nbsp;服務專線：(07)2269975轉1135<font color="#FF0000">校務行政中心未提供重設密碼服務，若無法登入或忘記密碼請洽詢各學校教務處進行重設密碼。</font></br>
+			&nbsp;&nbsp;&nbsp;服務時間:上班日上午08:30~17:30
+			&nbsp;&nbsp;&nbsp;服務人員：林先生
+			&nbsp;&nbsp;&nbsp;e-mail：khservice@oneplus.com.tw
+			
+		</span>
+	</body>
+</html>
